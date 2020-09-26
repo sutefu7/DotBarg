@@ -1,0 +1,49 @@
+﻿<UserControl x:Class="DotBarg.Views.ProjectReferenceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:b="clr-namespace:DotBarg.Behaviors"
+             xmlns:v="clr-namespace:DotBarg.Views"
+             xmlns:c="clr-namespace:DotBarg.Views.Controls"
+             xmlns:vm="clr-namespace:DotBarg.ViewModels"
+             xmlns:m="clr-namespace:DotBarg.Models"
+             xmlns:conv="clr-namespace:DotBarg.Converters"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:l="http://schemas.livet-mvvm.net/2011/wpf"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+
+        <conv:TreeNodeKindsToImageConverter x:Key="TreeNodeKindsToImageConverter" />
+        <conv:TreeNodeKindsToStringConverter x:Key="TreeNodeKindsToStringConverter" />
+
+    </UserControl.Resources>
+
+    <Grid>
+
+        <ScrollViewer
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Auto">
+
+            <c:CanvasEx 
+                IsBackgroundTile="True"
+                Width="50000"
+                Height="50000">
+
+                <Canvas.Resources>
+                    <ResourceDictionary Source="/Views/ResourceDictionalies/InheritanceTreeDictionary.xaml" />
+                </Canvas.Resources>
+
+                <i:Interaction.Behaviors>
+                    <b:ProjectReferenceTreeBehavior ProjectTreeItems="{Binding ProjectTreeItems, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </i:Interaction.Behaviors>
+
+            </c:CanvasEx>
+
+        </ScrollViewer>
+
+    </Grid>
+    
+</UserControl>
