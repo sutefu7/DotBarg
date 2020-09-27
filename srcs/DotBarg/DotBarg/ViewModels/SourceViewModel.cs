@@ -412,6 +412,8 @@ namespace DotBarg.ViewModels
 
                     model.Children.Add(memberModel);
                 }
+
+                model.IsExpanded = true;
             }
 
             return model;
