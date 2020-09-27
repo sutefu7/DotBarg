@@ -13,6 +13,19 @@ namespace DotBarg.Views.Controls
 {
     public class TextBlockEx : TextBlock
     {
+        // TreeView の ItemTemplate 内で TextBlock を使っていて、Inline に Run クラスのオブジェクトをセットしている場合、
+        // TreeView のノードをクリックした際、例外エラーが発生してしまうバグの対応
+        // 
+        // https://stackoverflow.com/questions/38325162/why-click-tree-throws-system-windows-documents-run-is-not-a-visual-or-visual3d
+        // 
+        // 上記より、
+        // IsHitTestVisible に false をセットして、クリック反応の対象外にしてしまう
+
+        public TextBlockEx() : base()
+        {
+            IsHitTestVisible = false;
+        }
+
         public static readonly DependencyProperty ColorTextProperty =
             DependencyProperty.Register(
                 nameof(ColorText),
