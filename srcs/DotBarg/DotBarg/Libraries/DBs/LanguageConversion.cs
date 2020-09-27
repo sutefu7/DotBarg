@@ -32,6 +32,7 @@ namespace DotBarg.Libraries.DBs
                 new LanguageConversion { CSharpType = "string", VBNetType = "String" },
                 new LanguageConversion { CSharpType = "object", VBNetType = "Object" },
                 new LanguageConversion { CSharpType = "DateTime", VBNetType = "Date" },
+                new LanguageConversion { CSharpType = "void", VBNetType = "Void" },
             };
 
             return items;

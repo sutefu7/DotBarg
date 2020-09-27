@@ -259,6 +259,7 @@
     <Compile Include="Views\Controls\LayoutItemTemplateSelector.cs" />
     <Compile Include="Views\Controls\ResizableThumb.cs" />
     <Compile Include="Views\Controls\ResizingAdorner.cs" />
+    <Compile Include="Views\Controls\TextBlockEx.cs" />
     <Compile Include="Views\Controls\TextEditorEx.cs" />
     <Compile Include="Views\Controls\TreeViewEx.cs" />
     <Compile Include="Views\DefinitionDiscoveryView.xaml.cs">

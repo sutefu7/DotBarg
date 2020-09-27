@@ -92,7 +92,7 @@
                             <StackPanel Orientation="Horizontal">
 
                                 <Image Name="image1" Source="{Binding TreeNodeKinds, Converter={StaticResource TreeNodeKindsToImageConverter}}" Margin="5,0,2,0" />
-                                <TextBlock Name="textblock1" Text="{Binding Text}" />
+                                <c:TextBlockEx x:Name="textblock1" ColorText="{Binding Text}" />
 
                             </StackPanel>
 
@@ -140,7 +140,7 @@
                             <StackPanel Orientation="Horizontal">
 
                                 <Image Name="image1" Source="{Binding TreeNodeKinds, Converter={StaticResource TreeNodeKindsToImageConverter}}" Margin="5,0,2,0" />
-                                <TextBlock Name="textblock1" Text="{Binding Text}" />
+                                <c:TextBlockEx x:Name="textblock1" ColorText="{Binding Text}" />
 
                             </StackPanel>
 

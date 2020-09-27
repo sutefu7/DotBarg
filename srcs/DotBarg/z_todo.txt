@@ -19,18 +19,3 @@ C:\Users\sutefu\Downloads\tactico-trunk-r8\trunk
 C:\Users\sutefu\Documents\root\dev\VisualStudio\src\00_Samples\WinForms or WPF\DotFolit\確認用プログラム
 
 
-
-
-視認性の向上
-TreeViewEx.TreeViewItem のヘッダー
-部分文字列に色付けしたい（VSライク）
-
-コロンがある場合、split して、コロンの後ろの文字列を色付けたい
-aaa : bbb
-
-引数がある場合、カンマ、[], (), <> 以外の文字列を色付けたい
-ccc(ddd, eee, ...)
-
-できるか？
-ColorString クラスとか作るか？
-
