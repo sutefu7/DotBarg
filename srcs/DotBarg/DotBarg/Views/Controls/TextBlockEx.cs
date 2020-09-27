@@ -73,7 +73,7 @@ namespace DotBarg.Views.Controls
                     // VBNet
                     // GetAge(IEnumerable(Of Integer), Dictionary(Of Integer, String), [Integer]) : Double
                     // GetName(ByRef Integer, ParamArray String()) : String()
-                    if (buffer.Length != 0)
+                    if (buffer.Length != 0 && items.Any() && items.LastOrDefault().Text == "(")
                     {
                         items.Add(new Run { Foreground = Brushes.Blue, Text = $"{buffer} " });
                         buffer.Clear();
