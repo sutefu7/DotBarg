@@ -13,8 +13,8 @@ namespace DotBarg.Views.Controls
 {
     public class TextBlockEx : TextBlock
     {
-        // TreeView の ItemTemplate 内で TextBlock を使っていて、Inline に Run クラスのオブジェクトをセットしている場合、
-        // TreeView のノードをクリックした際、例外エラーが発生してしまうバグの対応
+        // TreeView の ItemTemplate 内で TextBlock を使っているところまでは問題ないのだが、Inlines に Run クラスのオブジェクトをセットしている場合、
+        // TreeView のノードをクリックした際、Run 型から Visual 型にキャストできない旨の、例外エラーが発生してしまうバグの対応
         // 
         // https://stackoverflow.com/questions/38325162/why-click-tree-throws-system-windows-documents-run-is-not-a-visual-or-visual3d
         // 
@@ -86,9 +86,30 @@ namespace DotBarg.Views.Controls
                     // VBNet
                     // GetAge(IEnumerable(Of Integer), Dictionary(Of Integer, String), [Integer]) : Double
                     // GetName(ByRef Integer, ParamArray String()) : String()
-                    if (buffer.Length != 0 && items.Any() && items.LastOrDefault().Text == "(")
+                    // _Age : int
+                    if (buffer.Length != 0 && items.Any())
                     {
-                        items.Add(new Run { Foreground = Brushes.Blue, Text = $"{buffer} " });
+                        if (items.LastOrDefault().Text == "(")
+                        {
+                            items.Add(new Run { Foreground = Brushes.Blue, Text = $"{buffer} " });
+                        }
+
+                        if (items.LastOrDefault().Text == ", ")
+                        {
+                            switch (buffer.ToString())
+                            {
+                                case "ByRef":
+                                case "ParamArray":
+                                case "ref":
+                                case "in":
+                                case "out":
+                                case "params":
+
+                                    items.Add(new Run { Foreground = Brushes.Blue, Text = $"{buffer} " });
+                                    break;
+                            }
+                        }
+
                         buffer.Clear();
                     }
 
