@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotBarg.Libraries.Roslyns;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -194,6 +195,20 @@ namespace DotBarg.Libraries
 
 
         #endregion
+
+        #region Roslyn 系: 指定位置の定義元を検索して、定義位置情報を返却
+
+
+        // Util の名前空間に Roslyn 系を書きたくなかったから RoslynHelper 経由にしたが、余計だったか？
+
+        public async static Task<SearchResultInfo> FindSymbolAtPositionAsync(string sourceFile, int offset)
+        {
+            return await RoslynHelper.FindSymbolAtPositionAsync(sourceFile, offset);
+        }
+
+
+        #endregion
+
 
     }
 }

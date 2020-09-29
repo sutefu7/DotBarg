@@ -1,12 +1,7 @@
 ﻿using DotBarg.Libraries;
 using DotBarg.Models;
 using DotBarg.Views.Controls;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.FindSymbols;
-using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Xaml.Behaviors;
-using System;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -308,111 +303,12 @@ namespace DotBarg.Behaviors
 
             var srcFile = SelectedEditor.Document.FileName;
             var offset = SelectedEditor.TextArea.Caret.Offset;
-            var lang = GetLanguages(srcFile);
+            var result = await Util.FindSymbolAtPositionAsync(srcFile, offset);
 
-            var srcTree = default(SyntaxTree);
-            var si = default(ISymbol);
-
-            switch (lang)
-            {
-                case Languages.CSharp:
-
-                    srcTree = AppEnv.CSharpSyntaxTrees.FirstOrDefault(x => x.FilePath == srcFile);
-                    break;
-
-                case Languages.VBNet:
-
-                    srcTree = AppEnv.VisualBasicSyntaxTrees.FirstOrDefault(x => x.FilePath == srcFile);
-                    break;
-            }
-
-            try
-            {
-                // C# のコンパイラに探してもらう
-                if (AppEnv.CSharpCompilations.Any())
-                {
-                    // 定義元が誤検知してしまうバグの対応
-                    // 
-                    // 1プロジェクト毎にコンパイラを作成・登録しているが、登録対象のソースファイルは累積のリストとなっている。
-                    // 後になるにつれて、他プロジェクトのソースコードも含めてコンパイラを作成しているため、
-                    // 検索範囲が一番多い最後のコンパイラが一番精度が高くなっている。よって、降順で探してもらうことにする
-                    for (var i = AppEnv.CSharpCompilations.Count - 1; i >= 0; i--)
-                    {
-                        var compItem = AppEnv.CSharpCompilations[i];
-                        var model = compItem.GetSemanticModel(srcTree);
-                        if (model is null)
-                            continue;
-
-                        var ws = MSBuildWorkspace.Create();
-                        si = await SymbolFinder.FindSymbolAtPositionAsync(model, offset, ws);
-                        if (!(si is null) && si.Locations.Count() > 0 && si.Locations[0].IsInSource)
-                            break;
-                    }
-                }
-
-                // VBNet のコンパイラに探してもらう
-                if (si is null)
-                {
-                    if (AppEnv.VisualBasicCompilations.Any())
-                    {
-                        for (var i = AppEnv.VisualBasicCompilations.Count - 1; i >= 0; i--)
-                        {
-                            var compItem = AppEnv.VisualBasicCompilations[i];
-                            var model = compItem.GetSemanticModel(srcTree);
-                            if (model is null)
-                                continue;
-
-                            var ws = MSBuildWorkspace.Create();
-                            si = await SymbolFinder.FindSymbolAtPositionAsync(model, offset, ws);
-                            if (!(si is null) && si.Locations.Count() > 0 && si.Locations[0].IsInSource)
-                                break;
-                        }
-                    }
-                }
-            }
-            catch (AggregateException ex)
-            {
-                var i = 0;
-
-                foreach (var inner in ex.Flatten().InnerExceptions)
-                {
-                    i++;
-
-                    Console.WriteLine($"----------------------------------------");
-                    Console.WriteLine($"{i} つ目");
-                    Console.WriteLine($"{inner}");
-                    Console.WriteLine($"----------------------------------------");
-                    Console.WriteLine("");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"{ex}");
-            }
-
-            if (si is null)
+            if (string.IsNullOrEmpty(result.SourceFile))
                 return;
 
-            srcFile = si.Locations[0].SourceTree?.FilePath;
-            offset = si.Locations[0].SourceSpan.Start;
-
-            if (string.IsNullOrEmpty(srcFile) || !File.Exists(srcFile))
-                return;
-
-            SetData(srcFile, offset);
-        }
-
-        private static Languages GetLanguages(string sourceFile)
-        {
-            var extension = Path.GetExtension(sourceFile).ToLower();
-
-            switch (extension)
-            {
-                case ".cs": return Languages.CSharp;
-                case ".vb": return Languages.VBNet;
-            }
-
-            return Languages.Unknown;
+            SetData(result.SourceFile, result.Offset);
         }
     }
 }

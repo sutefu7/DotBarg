@@ -13,6 +13,16 @@ namespace DotBarg.ViewModels
 {
     public class SourceViewModel : DocumentPaneViewModel
     {
+        #region フィールド・プロパティ
+
+
+        // 設計方針的に SourceViewModel のコレクションを管理するのが MainViewModel なので、ここでは参照用です。
+        // 基本的には何もしないでください。
+        public MainViewModel MainVM { get; set; }
+
+
+        #endregion
+
         #region 変更通知プロパティ
 
 
@@ -47,6 +57,15 @@ namespace DotBarg.ViewModels
 
 
         // AvalonEdit 関連
+
+        public string HeaderTitle
+        {
+            get 
+            {
+                var fi = new FileInfo(SourceFile);
+                return $"{fi.Directory.Name}/{fi.Name}";
+            }
+        }
 
         private string _SourceFile;
         public string SourceFile
@@ -998,6 +1017,34 @@ namespace DotBarg.ViewModels
         }
 
         #endregion
+
+        #region エディタ / 右クリック / コンテキストメニュー / 定義へ移動　のクリック
+
+
+        public async void MoveDefinitionMenuItem_Click()
+        {
+            var result = await Util.FindSymbolAtPositionAsync(SourceFile, CaretOffset);
+
+            if (string.IsNullOrEmpty(result.SourceFile))
+                return;
+
+            // 定義元を発見した
+            if (result.SourceFile == SourceFile)
+            {
+                // 同じソースファイル内
+                CaretOffset = result.Offset;
+            }
+            else
+            {
+                // 別のソースファイル内
+                MainVM.AddSourceFilePane(result.SourceFile, result.Offset);
+            }
+        }
+
+
+        #endregion
+
+
 
 
     }

@@ -296,6 +296,7 @@ namespace DotBarg.ViewModels
             {
                 SourceFile = e.FileName,
                 SourceCode = File.ReadAllText(e.FileName, Util.GetEncoding(e.FileName)),
+                MainVM = this,
             };
 
             Documents.Add(vm);
@@ -307,6 +308,28 @@ namespace DotBarg.ViewModels
                 document.IsSelected = false;
 
             vm.IsSelected = true;
+        }
+
+
+
+        // SourceViewModel から呼び出されます。
+
+        public void AddSourceFilePane(string sourceFile, int offset)
+        {
+            var foundVM = Documents.OfType<SourceViewModel>().FirstOrDefault(x => x.SourceFile == sourceFile);
+            if (foundVM is null)
+            {
+                // 新規登録・表示
+                AddSourceFilePane(new TreeViewItemModel { FileName = sourceFile });
+                foundVM = Documents.OfType<SourceViewModel>().FirstOrDefault(x => x.SourceFile == sourceFile);
+            }
+            else
+            {
+                // すでに登録済み（表示済み）なので、再アクティブに切り替える
+                foundVM.IsSelected = true;
+            }
+
+            foundVM.CaretOffset = offset;
         }
 
 

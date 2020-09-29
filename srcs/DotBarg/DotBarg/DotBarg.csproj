@@ -237,6 +237,8 @@
     <Compile Include="Libraries\Roslyns\IMethodSyntaxWalker.cs" />
     <Compile Include="Libraries\Roslyns\ISourceSyntaxWalker.cs" />
     <Compile Include="Libraries\Roslyns\NamespaceInfo.cs" />
+    <Compile Include="Libraries\Roslyns\RoslynHelper.cs" />
+    <Compile Include="Libraries\Roslyns\SearchResultInfo.cs" />
     <Compile Include="Libraries\Roslyns\VBNetFoldingSyntaxWalker.cs" />
     <Compile Include="Libraries\Roslyns\VBNetMethodSyntaxWalker.cs" />
     <Compile Include="Libraries\Roslyns\VBNetSourceSyntaxWalker.cs" />

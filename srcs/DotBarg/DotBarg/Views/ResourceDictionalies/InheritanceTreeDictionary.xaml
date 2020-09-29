@@ -49,7 +49,7 @@
                     Header="{Binding DefinitionName}"
                     IsExpanded="{Binding IsExpanded}">
 
-                    <TreeView
+                    <c:TreeViewEx
                         ItemsSource="{Binding MemberTreeItems}"
                         Padding="10,10,30,10"
                         VirtualizingStackPanel.IsVirtualizing="True"
@@ -84,7 +84,7 @@
                             </HierarchicalDataTemplate>
                         </TreeView.ItemTemplate>
 
-                    </TreeView>
+                    </c:TreeViewEx>
 
                 </Expander>
 

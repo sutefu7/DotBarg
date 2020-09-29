@@ -29,20 +29,44 @@
             <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
 
-        <c:TextEditorEx
-            Grid.Column="0"
-            SourceFile="{Binding SourceFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-            SourceCode="{Binding SourceCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-            CaretOffset="{Binding CaretOffset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+        <DockPanel>
 
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="CaretPositionChanged">
-                    <l:LivetCallMethodAction MethodTarget="{Binding}" MethodName="TextEditorEx_CaretPositionChanged" />
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
+            <ToolBarTray DockPanel.Dock="Top">
+                <ToolBar>
+                    <c:TextBlockEx Text="{Binding HeaderTitle}" />
+                </ToolBar>
+            </ToolBarTray>
 
-        </c:TextEditorEx>
+            <c:TextEditorEx
+                Grid.Column="0"
+                SourceFile="{Binding SourceFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                SourceCode="{Binding SourceCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                CaretOffset="{Binding CaretOffset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
 
+                <c:TextEditorEx.ContextMenu>
+                    <ContextMenu>
+
+                        <MenuItem Header="定義へ移動">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="Click">
+                                    <l:LivetCallMethodAction MethodTarget="{Binding}" MethodName="MoveDefinitionMenuItem_Click" />
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </MenuItem>
+
+                    </ContextMenu>
+                </c:TextEditorEx.ContextMenu>
+
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="CaretPositionChanged">
+                        <l:LivetCallMethodAction MethodTarget="{Binding}" MethodName="TextEditorEx_CaretPositionChanged" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+
+            </c:TextEditorEx>
+
+        </DockPanel>
+        
         <GridSplitter
             Grid.Column="1"
             Width="5"

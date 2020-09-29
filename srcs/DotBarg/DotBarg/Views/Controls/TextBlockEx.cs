@@ -23,6 +23,8 @@ namespace DotBarg.Views.Controls
 
         public TextBlockEx() : base()
         {
+            FontSize = AppEnv.FontSize;
+
             IsHitTestVisible = false;
         }
 
