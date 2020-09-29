@@ -13,7 +13,7 @@
 
                 <ToolBarTray DockPanel.Dock="Top">
                     <ToolBar>
-                        <TextBlock Name="textBlock1" Text="Untitled" />
+                        <c:TextBlockEx x:Name="textBlock1" Text="Untitled" />
                     </ToolBar>
                 </ToolBarTray>
 

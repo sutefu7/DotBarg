@@ -107,10 +107,9 @@ namespace DotBarg.Behaviors
             newThumb.Height = 480;
 
             // タイトルをセット
-            var textBlock1 = newThumb.Template.FindName("textBlock1", newThumb) as TextBlock;
+            var textBlock1 = newThumb.Template.FindName("textBlock1", newThumb) as TextBlockEx;
 
-            var fi = new FileInfo(sourceFile);
-            textBlock1.Text = $"{fi.Directory.Name}/{fi.Name}";
+            textBlock1.Text = GetRelativeFilePath(sourceFile);
 
             // ソースコードをセット
             var editor1 = newThumb.Template.FindName("textEditor1", newThumb) as TextEditorEx;
@@ -144,6 +143,47 @@ namespace DotBarg.Behaviors
 
 
             return newThumb;
+        }
+
+        private static string GetRelativeFilePath(string sourceFile)
+        {
+            var prjInfo = AppEnv.ProjectInfos.FirstOrDefault(x =>
+            {
+                if (x.SourceFiles.Any(y => y.SourceFile == sourceFile))
+                    return true;
+                else
+                    return false;
+            });
+
+            var srcFolder = Path.GetDirectoryName(sourceFile);
+            var prjFolder = Path.GetDirectoryName(prjInfo.ProjectFile);
+            var difFolder = srcFolder.Replace(prjFolder, string.Empty);
+            var result = string.Empty;
+
+            if (string.IsNullOrEmpty(difFolder))
+            {
+                // プロジェクトフォルダ名/ソースファイル名
+                var fi = new FileInfo(sourceFile);
+                result = $"{fi.Directory.Name}/{fi.Name}";
+            }
+            else
+            {
+                difFolder = difFolder.Replace(@"\", "/");
+
+                if (difFolder.StartsWith("/"))
+                    difFolder = difFolder.Substring(1);
+
+                // プロジェクトフォルダ名/サブフォルダ名/.../ソースファイル名
+                var di = new DirectoryInfo(prjFolder);
+                var fi = new FileInfo(sourceFile);
+
+                prjFolder = di.Name;
+                result = $"{prjFolder}/{difFolder}/{fi.Name}";
+            }
+
+            result = result.Replace("/", " / ");
+
+            return result;
         }
 
         private static void SetNewLocation(ResizableThumb newThumb)

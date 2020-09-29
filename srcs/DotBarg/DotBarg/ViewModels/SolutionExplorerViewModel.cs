@@ -436,7 +436,7 @@ namespace DotBarg.ViewModels
                         var currentModel = default(TreeViewItemModel);
 
                         var i = 0;
-                        var subDir = subDirs[i];
+                        var subDir = subDirs[i++];
 
                         // これから作成しようとしているフォルダが、無ければ作成して登録、
                         // すでに登録されている場合、そのノードインスタンスを取得
@@ -453,7 +453,7 @@ namespace DotBarg.ViewModels
                         // サブフォルダがある分だけ、繰り返す
                         while (i < subDirs.Length)
                         {
-                            subDir = subDirs[i];
+                            subDir = subDirs[i++];
 
                             if (parentModel.Children.Any(x => x.Text == subDir))
                             {
@@ -467,7 +467,6 @@ namespace DotBarg.ViewModels
 
                             // 現在のフォルダを親フォルダに変えて、再帰
                             parentModel = currentModel;
-                            i++;
                         }
 
                         parentModel.Children.Add(srcHeaderModel);
