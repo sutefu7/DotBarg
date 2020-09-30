@@ -153,13 +153,5 @@ namespace DotBarg.Libraries
 
         #endregion
 
-        #region アプリの設定
-
-
-        public static double FontSize = 18;
-
-
-        #endregion
-
     }
 }

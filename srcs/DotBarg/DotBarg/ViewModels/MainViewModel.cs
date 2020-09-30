@@ -45,6 +45,25 @@ namespace DotBarg.ViewModels
         }
 
 
+        // ステータスバーの通知
+
+        private string _StatusBarMessage;
+        public string StatusBarMessage
+        {
+            get { return _StatusBarMessage; }
+            set { RaisePropertyChangedIfSet(ref _StatusBarMessage, value); }
+        }
+
+        // 主要コントロールのフォントサイズ
+
+        private double _FontSize;
+        public double FontSize
+        {
+            get { return _FontSize; }
+            set { RaisePropertyChangedIfSet(ref _FontSize, value); }
+        }
+
+
         #endregion
 
         #region コマンド
@@ -204,6 +223,10 @@ namespace DotBarg.ViewModels
             var listener = new PropertyChangedEventListener(SolutionExplorerVM);
             listener.RegisterHandler(SolutionExplorerVM_PropertyChanged);
             CompositeDisposable.Add(listener);
+
+            // MainView 側、ComboBox の初期選択項目と同じ値にする
+            FontSize = 18;
+            Util.MainVM = this;
         }
 
         #endregion
@@ -345,7 +368,7 @@ namespace DotBarg.ViewModels
             if (!double.TryParse(value?.ToString(), out doubleValue))
                 return;
 
-            AppEnv.FontSize = doubleValue;
+            FontSize = doubleValue;
         }
 
 

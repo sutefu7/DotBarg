@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
 
@@ -23,7 +24,13 @@ namespace DotBarg.Views.Controls
 
         public TextBlockEx() : base()
         {
-            FontSize = AppEnv.FontSize;
+            var fontSizeBinding = new Binding("FontSize")
+            {
+                Source = Util.MainVM,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
+            SetBinding(FontSizeProperty, fontSizeBinding);
 
             IsHitTestVisible = false;
         }

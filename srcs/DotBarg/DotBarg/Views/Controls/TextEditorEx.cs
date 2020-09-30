@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace DotBarg.Views.Controls
@@ -265,7 +266,13 @@ namespace DotBarg.Views.Controls
 
         public TextEditorEx() : base()
         {
-            FontSize = AppEnv.FontSize;
+            var fontSizeBinding = new Binding("FontSize")
+            {
+                Source = Util.MainVM,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
+            SetBinding(FontSizeProperty, fontSizeBinding);
 
             IsReadOnly = true;
             ShowLineNumbers = true;

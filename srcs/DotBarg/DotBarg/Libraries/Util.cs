@@ -1,4 +1,5 @@
 ﻿using DotBarg.Libraries.Roslyns;
+using DotBarg.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -208,6 +209,40 @@ namespace DotBarg.Libraries
 
 
         #endregion
+
+        #region MainViewModel に依存する系
+
+
+        // この MainViewModel は局所的にしか使いません。基本的には触らないでください。
+        // 以下のほか、拡張コントロール内でフォントサイズ変更用に MainVM をバインドしています。
+
+        public static MainViewModel MainVM;
+
+
+        #region ステータスバーの通知
+
+
+        public static void SetStatusBarMessage(string value, bool autoClear = false)
+        {
+            MainVM.StatusBarMessage = value;
+
+            if (autoClear)
+            {
+                // ※この処理を await で待機すると、（応答はあるが）3秒間待たされるので、わざと待機しない
+                Task.Run(async () =>
+                {
+                    await Task.Delay(3000);
+                    MainVM.StatusBarMessage = string.Empty;
+                });
+            }
+        }
+
+
+        #endregion
+
+
+        #endregion
+
 
 
     }

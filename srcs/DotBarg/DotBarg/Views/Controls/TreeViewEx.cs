@@ -1,5 +1,6 @@
 ﻿using DotBarg.Libraries;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace DotBarg.Views.Controls
@@ -8,7 +9,13 @@ namespace DotBarg.Views.Controls
     {
         public TreeViewEx() : base()
         {
-            FontSize = AppEnv.FontSize;
+            var fontSizeBinding = new Binding("FontSize")
+            {
+                Source = Util.MainVM,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
+            SetBinding(FontSizeProperty, fontSizeBinding);
 
             PreviewMouseWheel += TreeViewEx_PreviewMouseWheel;
         }
