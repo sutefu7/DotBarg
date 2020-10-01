@@ -32,4 +32,12 @@ Microsoft.MSBuild　という名前でした。
 
 
 
+■独自アイコン
+
+exe ファイルに対するアイコン設定
+→プロジェクト設定画面より app.ico をセット
+
+各 Window に対するアイコン設定
+→各 Window にセットするのは手間なので一元管理する
+　→ app.xaml/Resources 内で Window のスタイルにてセット
 

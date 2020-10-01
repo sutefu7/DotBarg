@@ -6,7 +6,11 @@
              Startup="OnStartup">
     
     <Application.Resources>
-         
+
+        <Style TargetType="Window">
+            <Setter Property="Icon" Value="/images/app.png" />
+        </Style>
+        
     </Application.Resources>
     
 </Application>
