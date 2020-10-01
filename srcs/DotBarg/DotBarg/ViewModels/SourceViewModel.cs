@@ -217,7 +217,26 @@ namespace DotBarg.ViewModels
             if (e is null || e.FileName != SourceFile)
                 return;
 
+            // 通常はキャレット位置が変わったら、TextEditorEx_CaretPositionChanged イベントハンドラが実行されていいのですが、
+            // 各ツリーノードのクリック時は、結果的に無駄処理として実行されるだけなので、フラグを立ててイベントハンドラが動作しないように抑制します。
+            // ただし、ソースツリーで選択した定義が、メンバーツリー（や継承ツリー）で表示中の定義範囲外の場合、表示更新したいため、わざと抑制フラグは立てません。
+            // ※ NowWorking フラグは、TextEditorEx_CaretPositionChanged() 内で使用しているイベント処理の抑制フラグです。
+            var useEventSkipFlag = false;
+            
+            if (MemberTreeItems.Any())
+            {
+                var item = MemberTreeItems.FirstOrDefault();
+                if (item.StartLength <= e.StartLength && e.EndLength <= item.EndLength)
+                    useEventSkipFlag = true;
+            }
+
+            if (useEventSkipFlag)
+                NowWorking = true;
+
             CaretOffset = e.StartLength;
+
+            if (useEventSkipFlag)
+                NowWorking = false;
         }
 
 
@@ -309,6 +328,9 @@ namespace DotBarg.ViewModels
             if (!AppEnv.UserDefinitions.Any(x => x.SourceFile == SourceFile))
                 return;
 
+            // ステータスバーへ通知
+            Util.SetStatusBarMessage("補助情報を取得中 ...");
+
             // このソースコードの開発言語を設定
             if (ThisLanguages == Languages.Unknown)
                 ThisLanguages = GetLanguages();
@@ -326,6 +348,9 @@ namespace DotBarg.ViewModels
 
             // 継承先ツリー
             ShowInheritanceDestinationTree();
+
+            // ステータスバーへ通知
+            Util.SetStatusBarMessage("補助情報の取得完了", true);
 
             NowWorking = false;
         }
@@ -452,6 +477,7 @@ namespace DotBarg.ViewModels
                 TreeNodeKinds = ConvertTreeNodeKinds(item.DefineKinds),
                 FileName = SourceFile,
                 StartLength = item.StartLength,
+                EndLength = item.EndLength,
             };
 
             // enum の場合、子ノードにメンバーを追加
@@ -464,6 +490,7 @@ namespace DotBarg.ViewModels
                         Text = member,
                         TreeNodeKinds = ConvertTreeNodeKinds(item.DefineKinds, true),
                         StartLength = item.StartLength,
+                        EndLength = item.EndLength,
                     };
 
                     model.Children.Add(memberModel);
@@ -645,7 +672,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var enumItem in enumItems)
+                foreach (var enumItem in enumItems.OrderBy(x => x.DisplaySignature))
                 {
                     var enumModel = ConvertTreeViewItemModel(enumItem);
                     headerModel.Children.Add(enumModel);
@@ -665,7 +692,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var delegateItem in delegateItems)
+                foreach (var delegateItem in delegateItems.OrderBy(x => x.DisplaySignature))
                 {
                     var delegateModel = ConvertTreeViewItemModel(delegateItem);
                     headerModel.Children.Add(delegateModel);
@@ -685,7 +712,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var eventItem in eventItems)
+                foreach (var eventItem in eventItems.OrderBy(x => x.DisplaySignature))
                 {
                     var eventModel = ConvertTreeViewItemModel(eventItem);
                     headerModel.Children.Add(eventModel);
@@ -705,7 +732,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var fieldItem in fieldItems)
+                foreach (var fieldItem in fieldItems.OrderBy(x => x.DisplaySignature))
                 {
                     var fieldModel = ConvertTreeViewItemModel(fieldItem);
                     headerModel.Children.Add(fieldModel);
@@ -725,7 +752,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var indexerItem in indexerItems)
+                foreach (var indexerItem in indexerItems.OrderBy(x => x.DisplaySignature))
                 {
                     var indexerModel = ConvertTreeViewItemModel(indexerItem);
                     headerModel.Children.Add(indexerModel);
@@ -745,7 +772,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var propertyItem in propertyItems)
+                foreach (var propertyItem in propertyItems.OrderBy(x => x.DisplaySignature))
                 {
                     var propertyModel = ConvertTreeViewItemModel(propertyItem);
                     headerModel.Children.Add(propertyModel);
@@ -766,7 +793,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var constructorItem in constructorItems)
+                foreach (var constructorItem in constructorItems.OrderBy(x => x.DisplaySignature))
                 {
                     var constructorModel = ConvertTreeViewItemModel(constructorItem);
                     headerModel.Children.Add(constructorModel);
@@ -786,7 +813,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var operatorItem in operatorItems)
+                foreach (var operatorItem in operatorItems.OrderBy(x => x.DisplaySignature))
                 {
                     var operatorModel = ConvertTreeViewItemModel(operatorItem);
                     headerModel.Children.Add(operatorModel);
@@ -806,7 +833,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var windowsApiItem in windowsApiItems)
+                foreach (var windowsApiItem in windowsApiItems.OrderBy(x => x.DisplaySignature))
                 {
                     var windowsApiModel = ConvertTreeViewItemModel(windowsApiItem);
                     headerModel.Children.Add(windowsApiModel);
@@ -826,7 +853,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var eventHandlerItem in eventHandlerItems)
+                foreach (var eventHandlerItem in eventHandlerItems.OrderBy(x => x.DisplaySignature))
                 {
                     var eventHandlerModel = ConvertTreeViewItemModel(eventHandlerItem);
                     headerModel.Children.Add(eventHandlerModel);
@@ -846,7 +873,7 @@ namespace DotBarg.ViewModels
 
                 parentModel.Children.Add(headerModel);
 
-                foreach (var methodItem in methodItems)
+                foreach (var methodItem in methodItems.OrderBy(x => x.DisplaySignature))
                 {
                     var methodModel = ConvertTreeViewItemModel(methodItem);
                     headerModel.Children.Add(methodModel);

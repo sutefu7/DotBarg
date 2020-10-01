@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace DotBarg.Libraries
 {
@@ -225,6 +226,7 @@ namespace DotBarg.Libraries
         public static void SetStatusBarMessage(string value, bool autoClear = false)
         {
             MainVM.StatusBarMessage = value;
+            DoEvents();
 
             if (autoClear)
             {
@@ -235,6 +237,23 @@ namespace DotBarg.Libraries
                     MainVM.StatusBarMessage = string.Empty;
                 });
             }
+        }
+
+
+        // 現在メッセージ待ち行列の中にある全てのUIメッセージを処理します。
+        // https://gist.github.com/pinzolo/2814091
+
+        public static void DoEvents()
+        {
+            var frame = new DispatcherFrame();
+            var callback = new DispatcherOperationCallback(obj =>
+            {
+                (obj as DispatcherFrame).Continue = false;
+                return null;
+            });
+
+            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, callback, frame);
+            Dispatcher.PushFrame(frame);
         }
 
 

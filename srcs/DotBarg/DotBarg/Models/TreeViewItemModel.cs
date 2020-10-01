@@ -54,6 +54,13 @@ namespace DotBarg.Models
             set { RaisePropertyChangedIfSet(ref _StartLength, value); }
         }
 
+        private int _EndLength;
+        public int EndLength
+        {
+            get { return _EndLength; }
+            set { RaisePropertyChangedIfSet(ref _EndLength, value); }
+        }
+
         private ObservableCollection<TreeViewItemModel> _Children;
         public ObservableCollection<TreeViewItemModel> Children
         {
@@ -70,6 +77,7 @@ namespace DotBarg.Models
             FileName = string.Empty;
             ContainerName = string.Empty;
             StartLength = -1;
+            EndLength = -1;
             Children = new ObservableCollection<TreeViewItemModel>();
         }
 
@@ -84,6 +92,7 @@ namespace DotBarg.Models
                 FileName = FileName,
                 ContainerName = ContainerName,
                 StartLength = StartLength,
+                EndLength = EndLength,
             };
 
             foreach (var child in Children)
