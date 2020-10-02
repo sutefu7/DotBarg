@@ -55,7 +55,7 @@ namespace DotBarg.Views.Controls
 
             if (!(self is null) && !string.IsNullOrEmpty(s))
             {
-                if (s.Contains("(") || s.Contains(":"))
+                if (s.Contains("(") || s.Contains(":") || s.Contains(" As "))
                     SetData(self, s);
                 else
                     self.Text = s;
@@ -73,79 +73,174 @@ namespace DotBarg.Views.Controls
                 self.Inlines.Add(item);
         }
 
-        private static List<Run> CreateControls(string value)
+        private static IEnumerable<Run> CreateControls(string value)
         {
-            var items = new List<Run>();
-            var buffer = new StringBuilder();
+            var tokens = ConvertToken(value);
+            var firstIdentifier = true;
+            var firstParenOffset = -1;
+            var lastParenOffset = -1;
 
-            var keywords = new List<char> { '(', ')', '[', ']', '<', '>', ',', ':' };
-            var foundFirstStartParentheses = false;
+            // カッコがある場合、引数を見やすくするため、スペースを追加する
+            // ただし、引数がある場合だけに制限する
+            if (value.Contains("("))
+            {
+                // 戻り値がある場合かつ、戻り値が配列の場合、誤判定防止のため削る
+                var tmp = value;
+
+                // C#
+                if (tmp.Contains(" : "))
+                    tmp = tmp.Substring(0, tmp.LastIndexOf(" : "));
+
+                // VBNet
+                if (tmp.Contains(" As "))
+                    tmp = tmp.Substring(0, tmp.LastIndexOf(" As "));
+
+                // 引数無しを置換してもカッコがある場合、引数があるということ
+                if (tmp.Replace("()", string.Empty).Contains("("))
+                {
+                    // VBNet
+                    // Func1(Integer)
+                    // Func1(Dictionary(Of Integer, String()))
+                    // Names(,,,)
+                    firstParenOffset = tmp.IndexOf("(");
+                    lastParenOffset = tmp.LastIndexOf(")");
+                }
+            }
+
+            var previousToken = default(Token);
+
+            foreach (var token in tokens)
+            {
+                switch (token.TokenKinds)
+                {
+                    case TokenKinds.Comma:
+
+                        // 後置スペース
+                        // 引数カンマは後置スペースを入れたいが、
+                        // 2次元配列などの場合は入れたくない
+                        // Func(int i, string s)
+                        // string[,] items
+                        // → TokenKinds.Identifier 側で対応する
+                        yield return new Run { Foreground = Brushes.Black, Text = $"{token.Value}" };
+                        break;
+
+                    case TokenKinds.Coron:
+
+                        // 前後置スペース
+                        yield return new Run { Foreground = Brushes.Black, Text = $" {token.Value} " };
+                        break;
+
+                    case TokenKinds.Parentheses:
+
+                        if (token.StartOffset == firstParenOffset)
+                        {
+                            yield return new Run { Foreground = Brushes.Black, Text = $"{token.Value} " };
+                        }
+                        else if (token.StartOffset == lastParenOffset)
+                        {
+                            yield return new Run { Foreground = Brushes.Black, Text = $" {token.Value}" };
+                        }
+                        else
+                        {
+                            yield return new Run { Foreground = Brushes.Black, Text = $"{token.Value}" };
+                        }
+
+                        break;
+
+                    case TokenKinds.Identifier:
+
+                        // 1つ前のトークンがカンマの場合、前置スペースを追加する
+                        // 引数に属性がついている場合は、後置スペースを追加する
+                        var frontSpace = string.Empty;
+                        var rearSpace = string.Empty;
+
+                        if (previousToken?.TokenKinds == TokenKinds.Comma)
+                            frontSpace = " ";
+
+                        if (firstIdentifier)
+                        {
+                            // 定義名
+                            yield return new Run { Foreground = Brushes.Black, Text = $"{token.Value}" };
+                            firstIdentifier = false;
+                        }
+                        else
+                        {
+                            // キーワードと定義で色分けする
+                            var b1 = Brushes.LightSeaGreen;
+
+                            if (IsKeyword(token.Value))
+                                b1 = Brushes.Blue;
+
+                            if (IsSubKeyword(token.Value))
+                            {
+                                b1 = Brushes.Blue;
+                                rearSpace = " ";
+
+                                // As キーワードの場合、前後スペース
+                                if (token.Value == "As")
+                                    frontSpace = " ";
+                            }
+
+                            yield return new Run { Foreground = b1, Text = $"{frontSpace}{token.Value}{rearSpace}" };
+                        }
+
+                        break;
+                }
+
+                previousToken = token;
+            }
+        }
+
+
+
+        //
+
+        private enum TokenKinds
+        {
+            // 文字列（キーワード、定義名は共通）
+            Identifier,
+
+            // カッコ（()<>{}[]）
+            Parentheses,
+
+            // ,
+            Comma,
+
+            // :
+            Coron,
+        }
+
+        private class Token
+        {
+            public int StartOffset { get; set; }
+
+            public string Value { get; set; }
+
+            public TokenKinds TokenKinds { get; set; }
+        }
+
+        private static IEnumerable<Token> ConvertToken(string value)
+        {
+            // C#, VBNet 共通
+
+            var position = -1;
+            var buffer = new StringBuilder();
+            var keywords = new List<char> { '(', ')', '<', '>', '[', ']', ',', ':', ' ' };
 
             for (var i = 0; i < value.Length; i++)
             {
+                //
                 var currentChar = value[i];
                 var nextChar = '\0';
+                var thirdChar = '\0';
 
-                if (i + 1 < value.Length)
-                    nextChar = value[i + 1];
+                if (i + 1 < value.Length) nextChar = value[i + 1];
+                if (i + 2 < value.Length) thirdChar = value[i + 2];
 
-                if (currentChar == ' ')
-                {
-                    // スペースが来た時にバッファにためている場面は、以下か（Of, ByRef, ParamArray）
-                    // VBNet
-                    // GetAge(IEnumerable(Of Integer), Dictionary(Of Integer, String), [Integer]) : Double
-                    // GetName(ByRef Integer, ParamArray String()) : String()
-                    // _Age : int
-                    if (buffer.Length != 0 && items.Any())
-                    {
-                        if (items.LastOrDefault().Text == "(")
-                        {
-                            items.Add(new Run { Foreground = Brushes.Blue, Text = $"{buffer} " });
-                        }
+                position++;
 
-                        if (items.LastOrDefault().Text == ", ")
-                        {
-                            switch (buffer.ToString())
-                            {
-                                case "ByRef":
-                                case "ParamArray":
-                                case "ref":
-                                case "in":
-                                case "out":
-                                case "params":
 
-                                    items.Add(new Run { Foreground = Brushes.Blue, Text = $"{buffer} " });
-                                    break;
-                            }
-                        }
-
-                        buffer.Clear();
-                    }
-
-                    continue;
-                }
-
-                if (buffer.Length != 0 && keywords.Contains(currentChar))
-                {
-                    if (!foundFirstStartParentheses)
-                    {
-                        items.Add(new Run { Foreground = Brushes.Black, Text = $"{buffer}" });
-                        foundFirstStartParentheses = true;
-                    }
-                    else
-                    {
-                        // キーワードと定義で色分けする
-                        var b1 = Brushes.LightSeaGreen;
-
-                        if (IsKeyword($"{buffer}"))
-                            b1 = Brushes.Blue;
-
-                        items.Add(new Run { Foreground = b1, Text = $"{buffer}" });
-                    }
-
-                    buffer.Clear();
-                }
-
+                //
                 switch (currentChar)
                 {
                     case '(':
@@ -155,63 +250,41 @@ namespace DotBarg.Views.Controls
                     case '[':
                     case ']':
 
-                        items.Add(new Run { Foreground = Brushes.Black, Text = $"{currentChar}" });
+                        yield return new Token { StartOffset = position, TokenKinds = TokenKinds.Parentheses, Value = $"{currentChar}" };
                         break;
 
                     case ',':
 
-                        // 後置スペース
-                        items.Add(new Run { Foreground = Brushes.Black, Text = $"{currentChar} " });
+                        yield return new Token { StartOffset = position, TokenKinds = TokenKinds.Comma, Value = $"{currentChar}" };
                         break;
 
                     case ':':
 
-                        // 前後スペース
-                        items.Add(new Run { Foreground = Brushes.Black, Text = $" {currentChar} " });
+                        yield return new Token { StartOffset = position, TokenKinds = TokenKinds.Coron, Value = $"{currentChar}" };
+                        break;
+
+                    case ' ':
                         break;
 
                     default:
 
                         buffer.Append(currentChar);
+
+                        if (keywords.Contains(nextChar))
+                        {
+                            yield return new Token { StartOffset = position, TokenKinds = TokenKinds.Identifier, Value = $"{buffer}" };
+                            buffer.Clear();
+                        }
+
                         break;
                 }
             }
 
-            // カッコがあり、引数がある場合
-            // 共通, Func1( int, int ) など、引数を見やすくしたい
-            if (items.Any(x => x.Text == "("))
-            {
-                // 引数があるかどうかチェック
-                var firstIndex = items.FindIndex(x => x.Text == "(");
-                var lastIndex = items.FindLastIndex(x => x.Text == ")");
-                if (firstIndex + 1 == lastIndex)
-                {
-                    // nop.
-                }
-                else
-                {
-                    var first = items.FirstOrDefault(x => x.Text == "(");
-                    first.Text = "( ";
-
-                    var last = items.LastOrDefault(x => x.Text == ")");
-                    last.Text = " )";
-                }
-            }
-
-            // 戻り値がある型の場合でかつ、単数の型の場合
-            // 戻り値が残っている場合は追加
             if (buffer.Length != 0)
             {
-                // キーワードと定義で色分けする
-                var b1 = Brushes.LightSeaGreen;
-
-                if (IsKeyword($"{buffer}"))
-                    b1 = Brushes.Blue;
-
-                items.Add(new Run { Foreground = b1, Text = $"{buffer}" });
+                yield return new Token { StartOffset = position, TokenKinds = TokenKinds.Identifier, Value = $"{buffer}" };
+                buffer.Clear();
             }
-
-            return items;
         }
 
         private static bool IsKeyword(string value)
@@ -228,6 +301,34 @@ namespace DotBarg.Views.Controls
                 case Languages.VBNet:
 
                     if (AppEnv.LanguageConversions.Any(x => x.VBNetType == value))
+                        return true;
+
+                    break;
+            }
+
+            return false;
+        }
+
+        private static bool IsSubKeyword(string value)
+        {
+            var keywords = new List<string>();
+
+            switch (AppEnv.Languages)
+            {
+                case Languages.CSharp:
+
+                    keywords.AddRange(new string[] { "ref", "in", "out", "params" });
+
+                    if (keywords.Contains(value))
+                        return true;
+
+                    break;
+
+                case Languages.VBNet:
+
+                    keywords.AddRange(new string[] { "ByRef", "ParamArray", "Of", "As" });
+
+                    if (keywords.Contains(value))
                         return true;
 
                     break;

@@ -345,8 +345,8 @@ namespace DotBarg.Libraries.Roslyns
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            var returnType = node.ChildNodes().FirstOrDefault().ToString();
-            var isSubMethod = node.ChildNodes().FirstOrDefault().ChildTokens().Any(x => x.Kind() == SyntaxKind.VoidKeyword);
+            var returnType = node.ChildNodes().FirstOrDefault(x => !(x is AttributeListSyntax)).ToString();
+            var isSubMethod = node.ChildNodes().FirstOrDefault(x => !(x is AttributeListSyntax)).ChildTokens().Any(x => x.Kind() == SyntaxKind.VoidKeyword);
             var isPartial = node.ChildTokens().Any(x => x.Kind() == SyntaxKind.PartialKeyword);
             var defineName = node.ChildTokens().FirstOrDefault(x => x.Kind() == SyntaxKind.IdentifierToken).ToString();
 
