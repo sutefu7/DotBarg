@@ -52,6 +52,10 @@
 
                 <MenuItem Header="ソリューションファイルの選択...(_O)">
 
+                    <MenuItem.Icon>
+                        <Image Source="/images/Solution.png" Width="16" Height="16" Stretch="Uniform" />
+                    </MenuItem.Icon>
+
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="Click">
                             <l:OpenFileDialogInteractionMessageAction>
@@ -86,8 +90,13 @@
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
 
-                <Button Content="ソリューションファイルの選択...">
+                <Button>
 
+                    <StackPanel Orientation="Horizontal" Margin="4,2">
+                        <Image Source="/images/Solution.png" VerticalAlignment="Center" />
+                        <TextBlock Text="ソリューションファイルの選択..." VerticalAlignment="Center" Margin="5,0,0,0" />
+                    </StackPanel>
+                    
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="Click">
                             <l:OpenFileDialogInteractionMessageAction>

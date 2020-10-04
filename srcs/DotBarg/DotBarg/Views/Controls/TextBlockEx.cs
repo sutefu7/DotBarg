@@ -161,9 +161,18 @@ namespace DotBarg.Views.Controls
 
                         if (firstIdentifier)
                         {
-                            // 定義名
-                            yield return new Run { Foreground = Brushes.Black, Text = $"{token.Value}" };
-                            firstIdentifier = false;
+                            if (IsSubKeyword(token.Value))
+                            {
+                                // C#
+                                // operator +(Class1 x, Class1 y)
+                                yield return new Run { Foreground = Brushes.Blue, Text = $"{token.Value} " };
+                            }
+                            else
+                            {
+                                // 定義名
+                                yield return new Run { Foreground = Brushes.Black, Text = $"{token.Value}" };
+                                firstIdentifier = false;
+                            }
                         }
                         else
                         {
@@ -319,7 +328,7 @@ namespace DotBarg.Views.Controls
             {
                 case Languages.CSharp:
 
-                    keywords.AddRange(new string[] { "ref", "in", "out", "params" });
+                    keywords.AddRange(new string[] { "ref", "in", "out", "params", "operator" });
 
                     if (keywords.Contains(value))
                         return true;

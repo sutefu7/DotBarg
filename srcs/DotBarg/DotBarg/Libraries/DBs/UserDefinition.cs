@@ -125,7 +125,10 @@ namespace DotBarg.Libraries.DBs
 
                 case DefineKinds.Operator:
 
+                    // Visual Studio では戻り値は表示されないが、本ツールでは戻り値も表示する
                     // operator +(Point, Point)
+                    // ↓
+                    // operator +(Point, Point) : Point
                     sb.Append("operator ");
                     sb.Append($"{DisplayDefineName}");
                     sb.Append("(");
@@ -134,6 +137,10 @@ namespace DotBarg.Libraries.DBs
                         sb.Append($"{DisplayMethodArguments}");
 
                     sb.Append(")");
+                    sb.Append(" : ");
+
+                    sb.Append($"{DisplayReturnType}");
+
                     break;
 
                 case DefineKinds.WindowsAPI:
