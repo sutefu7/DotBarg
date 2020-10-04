@@ -1,3 +1,17 @@
+■DotBarg
+
+
+・C# が分かる
+・C# / VBNet の言語仕様を知っている
+・WPF / コードビハインド、MVVM パターンを知っている
+・WPF / Window, UserControl, ResourceDictionary, Converter, Behavior, DependencyProperty, などを知っている
+・以下のライブラリを扱える
+Livet
+Roslyn
+AvalonDock
+AvalonEdit
+
+
 ■NuGet パッケージ
 （2020/09 時点）
 

@@ -228,6 +228,17 @@ namespace DotBarg.ViewModels
                 var item = MemberTreeItems.FirstOrDefault();
                 if (item.StartLength <= e.StartLength && e.EndLength <= item.EndLength)
                     useEventSkipFlag = true;
+
+                // 例外として、インナーのクラス、構造体、インターフェースの場合は再表示させる
+                switch (e.TreeNodeKinds)
+                {
+                    case TreeNodeKinds.Class:
+                    case TreeNodeKinds.Struct:
+                    case TreeNodeKinds.Interface:
+
+                        useEventSkipFlag = false;
+                        break;
+                }
             }
 
             if (useEventSkipFlag)

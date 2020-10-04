@@ -8,7 +8,7 @@
 ソースコード間の呼び出し関係
 コールグラフ
 
-※ソースファイルの下に定義を置くのは不採用
+※ソースファイルノードの下に定義ノードを置くのは不採用
 ソースファイルのツリー内に、定義ツリーがあると、分かりづらくなる【気がする】ため
 ソリューションエクスプローラーペインには、ソースファイルの種類だけを表示したい
 定義は別画面に分けたほうが分かりやすいか
@@ -17,5 +17,3 @@
 動作確認用プログラム
 C:\Users\sutefu\Downloads\tactico-trunk-r8\trunk
 C:\Users\sutefu\Documents\root\dev\VisualStudio\src\00_Samples\WinForms or WPF\DotFolit\確認用プログラム
-
-

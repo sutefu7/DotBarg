@@ -92,6 +92,8 @@ namespace DotBarg.Views.Controls
                     tmp = tmp.Substring(0, tmp.LastIndexOf(" : "));
 
                 // VBNet
+                // シグネチャとして表示させるため、引数名は消去している。つまり、
+                // Func(Integer, String) As Integer と、As が付く場合は戻り値だけ
                 if (tmp.Contains(" As "))
                     tmp = tmp.Substring(0, tmp.LastIndexOf(" As "));
 
