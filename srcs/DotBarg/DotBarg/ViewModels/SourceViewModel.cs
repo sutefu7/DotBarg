@@ -962,7 +962,14 @@ namespace DotBarg.ViewModels
             if (item.BaseTypeInfos.Any())
             {
                 foreach (var baseType in item.BaseTypeInfos)
+                {
+                    // VBNet ソースファイルの場合で、定義元ソースコードが見つからなかった場合、
+                    // 定義名が C# 形式で表示されるバグの対応
+                    if (AppEnv.Languages == Languages.VBNet)
+                        baseType.DisplayBaseType = item.ConvertCurrentLanguageType(baseType.DisplayBaseType);
+
                     AddInheritanceSourceMember(baseType, model.DefinitionName);
+                }
             }
         }
 

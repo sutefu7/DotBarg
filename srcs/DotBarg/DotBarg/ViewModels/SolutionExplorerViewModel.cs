@@ -211,39 +211,184 @@ namespace DotBarg.ViewModels
             {
                 var containers = AppEnv.UserDefinitions.Where(x => x.BaseTypeInfos.Any());
                 if (containers.Any())
-                {
-                    // class, struct, interface
-                    foreach (var container in containers)
-                    {
-                        // 継承元クラス、インターフェース
-                        foreach (var baseType in container.BaseTypeInfos)
-                        {
-                            // すでに定義元が判明している場合は、飛ばす
-                            if (baseType.DefinitionStartLength != -1)
-                                continue;
-
-                            // １つ分について、可能性のある名前空間
-                            foreach (var defineFullName in baseType.CandidatesDefineFullNames)
-                            {
-                                if (AppEnv.UserDefinitions.Any(x => x.DefineFullName == defineFullName))
-                                {
-                                    var foundItem = AppEnv.UserDefinitions.FirstOrDefault(x => x.DefineFullName == defineFullName);
-                                    baseType.DefinitionSourceFile = foundItem.SourceFile;
-                                    baseType.DefinitionStartLength = foundItem.StartLength;
-                                    baseType.DefinitionEndLength = foundItem.EndLength;
-
-                                    // 名前空間の解決が正しくないバグの対応
-                                    // 見つけたら候補探しを止める
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
+                    FindDefinitionInfo(containers);
 
                 var model = CreateTreeData(SolutionFile);
                 Items.Add(model);
             });
+        }
+
+        private void FindDefinitionInfo(IEnumerable<UserDefinition> containers)
+        {
+            // class, struct, interface
+            foreach (var container in containers)
+            {
+                // 継承元クラス、インターフェース
+                foreach (var baseType in container.BaseTypeInfos)
+                {
+                    // すでに定義元が判明している場合は、飛ばす
+                    if (baseType.DefinitionStartLength != -1)
+                        continue;
+
+                    // １つ分について、可能性のある名前空間
+                    foreach (var defineFullName in baseType.CandidatesDefineFullNames)
+                    {
+                        var defineName = defineFullName.Substring(defineFullName.LastIndexOf(".") + 1);
+
+                        if (defineName.Contains("<"))
+                        {
+                            // 継承元クラス、またはインターフェースはジェネリック型
+                            // クローズドジェネリック形式で書いている定義名を、オープンジェネリック形式で見つけることはできない（文字列一致できない）
+                            // class Class1 : IEnumerable<int>  ... クローズドジェネリック型
+                            // interface IEnumerable<T>         ... オープンジェネリック型
+                            // → ジェネリック型の個数一致で判断する
+
+                            var closedCount = CountGenericType(defineFullName);
+                            var partialName = defineFullName.Substring(0, defineFullName.IndexOf("<") + 1);
+
+                            // "IEnumerable<int>".StartsWith("IEnumerable<")
+                            if (AppEnv.UserDefinitions.Any(x => x.DefineFullName.StartsWith(partialName)))
+                            {
+                                var items = AppEnv.UserDefinitions.Where(x => x.DefineFullName.StartsWith(partialName));
+                                foreach (var item in items)
+                                {
+                                    var openCount = CountGenericType(item.DefineName);
+                                    if (openCount == closedCount)
+                                    {
+                                        baseType.DefinitionSourceFile = item.SourceFile;
+                                        baseType.DefinitionStartLength = item.StartLength;
+                                        baseType.DefinitionEndLength = item.EndLength;
+
+                                        // 名前空間の解決が正しくないバグの対応
+                                        // 見つけたら候補探しを止める
+                                        break;
+                                    }
+                                }
+
+                                // 名前空間の解決が正しくないバグの対応
+                                // 見つけたら候補探しを止める
+                                if (baseType.DefinitionStartLength != -1)
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            // 非ジェネリック型
+
+                            if (AppEnv.UserDefinitions.Any(x => x.DefineFullName == defineFullName))
+                            {
+                                var foundItem = AppEnv.UserDefinitions.FirstOrDefault(x => x.DefineFullName == defineFullName);
+                                baseType.DefinitionSourceFile = foundItem.SourceFile;
+                                baseType.DefinitionStartLength = foundItem.StartLength;
+                                baseType.DefinitionEndLength = foundItem.EndLength;
+
+                                // 名前空間の解決が正しくないバグの対応
+                                // 見つけたら候補探しを止める
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private int CountGenericType(string value)
+        {
+            // 以下みたいな再帰の <> があっても誤判定しないようにする
+            // class Class1 : Base<Dictionary<int, int>, Dictionary<string, string>>
+
+            var firstIndex = value.IndexOf("<");
+            var lastIndex = value.LastIndexOf(">");
+
+            // Dictionary<int, int>, Dictionary<string, string>
+            var tmp = value.Substring(0, lastIndex);
+            tmp = tmp.Substring(firstIndex + 1);
+
+            // 各型内にあるカンマは塗りつぶす（判定の邪魔なので）
+            // Dictionary<int, int>, Dictionary<string, string>
+            // ↓
+            // Dictionary__changed__, Dictionary__changed__
+            //
+            // Dictionary<int, Dictionary<int, int>>, Dictionary<string, Dictionary<int, string>>
+            // ↓
+            // Dictionary__changed__, Dictionary__changed__
+
+            var sb = new StringBuilder();
+            var inParen = false;
+            
+            // <> ... ジェネリック型を想定
+            var startParenCount = 0;
+            var endParenCount = 0;
+            
+            // [] ... 配列型を想定
+            var startBraceCount = 0;
+            var endBraceCount = 0;
+
+            foreach (var ch in tmp)
+            {
+                switch (ch)
+                {
+                    case '<':
+                        inParen = true;
+                        startParenCount++;
+                        break;
+
+                    case '>':
+                        endParenCount++;
+
+                        if (startParenCount != 0 && startParenCount == endParenCount)
+                        {
+                            sb.Append("__changed__");
+
+                            inParen = false;
+                            startParenCount = 0;
+                            endParenCount = 0;
+                        }
+
+                        break;
+
+                    case '[':
+
+                        // カッコチェックの優先度は <> の後に [] となるので、<> のチェックが始まっているときは何もしない
+                        if (startParenCount == 0)
+                        {
+                            inParen = true;
+                            startBraceCount++;
+                        }
+
+                        break;
+
+                    case ']':
+
+                        // カッコチェックの優先度は <> の後に [] となるので、<> のチェックが始まっているときは何もしない
+                        if (startParenCount == 0)
+                        {
+                            endBraceCount++;
+
+                            if (startBraceCount != 0 && startBraceCount == endBraceCount)
+                            {
+                                sb.Append("__changed__");
+
+                                inParen = false;
+                                startBraceCount = 0;
+                                endBraceCount = 0;
+                            }
+                        }
+
+                        break;
+
+                    default:
+
+                        if (!inParen)
+                            sb.Append(ch);
+
+                        break;
+                }
+            }
+
+            tmp = sb.ToString();
+            var values = tmp.Split(',');
+            return values.Length;
         }
 
         private TreeViewItemModel CreateTreeData(string solutionFile)
