@@ -510,7 +510,7 @@ namespace DotBarg.Libraries.Roslyns
         public override void VisitEventFieldDeclaration(EventFieldDeclarationSyntax node)
         {
             var variable = node.ChildNodes().FirstOrDefault(x => x is VariableDeclarationSyntax);
-            var defineType = variable.ChildNodes().FirstOrDefault(x => x is IdentifierNameSyntax).ToString();
+            var defineType = variable.ChildNodes().FirstOrDefault().ToString();
             var defineName = variable.ChildNodes().FirstOrDefault(x => x is VariableDeclaratorSyntax).ToString();
 
             var startLength = node.Span.Start;
